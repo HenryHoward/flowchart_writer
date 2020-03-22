@@ -1,0 +1,629 @@
+<!doctype html>
+<html>
+<head>
+  <title>Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>  <style type="text/css">
+
+    body {
+      font-family: Helvetica;
+    }
+
+    .page-title {
+      text-align: center;
+    }
+
+    #mynetwork {
+      width:100%;
+      height: 90vh;
+      margin:auto;
+      border: 1px solid lightgray;
+    }
+
+    #node-popUp {
+      display: none;
+      position: absolute;
+      top: 45%;
+      left: 2.9%;
+      z-index: 299;
+      min-width: 90%;
+      min-height: 10%;
+      background-color: #f9f9f9;
+      border-style: solid;
+      border-width: 3px;
+      border-color: #5394ed;
+      padding: 10px;
+      text-align: center;
+    }
+    #edge-popUp {
+      display: none;
+      position: absolute;
+      top: 45%;
+      left: 2.9%;
+      z-index: 299;
+      min-width: 90%;
+      min-height: 10%;
+      background-color: #f9f9f9;
+      border-style: solid;
+      border-width: 3px;
+      border-color: #5394ed;
+      padding: 10px;
+      text-align: center;
+    }
+    #item-focusor {
+      text-align: center;
+      padding:20px;
+    }
+    table.legend_table {
+      font-size: 11px;
+      border-width: 1px;
+      border-color: #d3d3d3;
+      border-style: solid;
+    }
+    table.legend_table,
+    td {
+      padding: 2px;
+    }
+    div.table_content {
+      width: 80px;
+      text-align: center;
+    }
+    div.table_description {
+      width: 100px;
+    }
+
+    #edge-weight-code, #node-label {
+      font-size: 18px;
+      width: 100%;
+    }
+
+    #likelihood-rat {
+      font-size: 18px;
+      width: 30%;
+    }
+
+    .lr-row {
+      text-align:left;
+    }
+
+    #operation {
+      font-size: 28px;
+    }
+
+    div.vis-network div.vis-navigation div.vis-button.vis-up {
+      display: none;
+    }
+
+    div.vis-network div.vis-navigation div.vis-button.vis-down {
+      display: none;
+    }
+
+    div.vis-network div.vis-navigation div.vis-button.vis-left {
+      display: none;
+    }
+
+    div.vis-network div.vis-navigation div.vis-button.vis-right {
+      display: none;
+    }
+
+    .save-div {
+      text-align:center;
+      padding: 20px
+    }
+
+    #save-button {
+      margin: auto;
+      padding: 10px 15px;
+      border: solid 1px #222222;
+      font-size: 16px;
+    }
+
+    #save-button:hover {
+      background-color: #efefef
+    }
+
+    .physics-div {
+      padding:20px;
+    }
+
+    @media (min-width: 768px) {
+      #mynetwork {
+        width: 80%;
+      }
+
+      #edge-popUp {
+        left: 35%;
+        min-width: 30%;
+      }
+
+      #node-popUp {
+        left: 35%;
+        min-width: 30%;
+      }
+    }
+
+  </style>
+</head>
+<body>
+<div class='page-title'>
+  <h1>Flowchart</h1>
+</div>
+<div id='item-focusor'>
+  <table style="margin:auto;">
+    <tbody>
+      <tr>
+        <td>Select an item:</td>
+        <td><input id="focus-item" value="" /></td>
+        <tr>
+          <td>Degrees of connections to show:</td>
+          <td><input id="focus-degrees" value="5" /></td>
+        </tr>
+      </tr>
+    </tbody>
+  </table>
+  <button id=focus-button onClick='focusSelected()'>Focus</button>
+  <div class='physics-div'>
+    <input type="checkbox" id="physics-checkbox" name="physics" value="1" onclick="togglePhysics()" checked>
+    <label for="physics-checkbox">Network physics</label><br>
+  </div>
+</div>
+<div id="mynetwork"></div>
+
+<div id="node-popUp">
+  <span id="node-operation">node</span> <br />
+  <table style="margin:auto;">
+    <tbody>
+      <tr>
+        <td>Name:</td>
+        <td><input id="node-label" value="new value" /></td>
+      </tr>
+    </tbody>
+  </table>
+  <input type="button" value="save" id="node-saveButton" />
+  <input type="button" value="cancel" id="node-cancelButton" />
+</div>
+
+<div id="edge-popUp">
+  <span id="edge-operation">edge</span> <br />
+  <table style="margin:auto; width:100%">
+    <tbody>
+      <tr>
+        <td>Code:</td>
+        <td><input id="edge-weight-code" value="new value" /></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td style='font-family:Helvetica'>X</td>
+      </tr>
+      <tr>
+        <td>LR:</td>
+        <td class='lr-row'><input id="likelihood-rat" value="new value" /></td>
+      </tr>
+      <tr>
+        <td>Causality:</td>
+        <td class='lr-row'>
+          <input type="radio" id="forward-radio" name="causality" value="forward">
+          <label for="forward-radio">Forward</label>
+          <input type="radio" id="reversed-radio" name="causality" value="reversed">
+          <label for="reversed-radio">Reversed</label>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <input type="button" value="save" id="edge-saveButton" />
+  <input type="button" value="cancel" id="edge-cancelButton" />
+</div>
+
+<div class='save-div'>
+  <button id=save-button onClick='customSubmit()'>Save changes</button>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+  // create an array with nodes
+
+  /*
+  function printDatabase() {
+    console.log('nodes')
+    console.log(data.nodes.get())
+    console.log('edges')
+    console.log(data.edges.get())
+  }
+  */
+
+  var nodes = new vis.DataSet(<!--nodesFromDataBaseGoHere-->);
+
+  var edges = new vis.DataSet(<!--edgesFromDataBaseGoHere-->);
+
+  /*
+  var nodes = new vis.DataSet([
+    {id: 'Fever', label: 'Fever', hidden: true, physics:false},
+    {id: 'AnotherNode', label: 'Another Node', hidden: true, physics:false},
+    {id: 'Node3', label: 'Node 3', hidden: true, physics:false},
+    {id: 'Node4', label: 'Node 4', hidden: true, physics:false},
+    {id: 'Node5', label: 'Node 5', hidden: true, physics:false},
+  ]);
+
+  // create an array with edges
+  var edges = new vis.DataSet([
+    {from: 'Fever', to: 'AnotherNode', title:'.get_max(back_time=inf, loc="all")', value: 1},
+    {from: 'Fever', to: 'Node3', title:'mod2', value: 2},
+    {from: 'Node3', to: 'Node4', title:'mod3', value: 3},
+    {from: 'Node5', to: 'AnotherNode', title:'mod4', value: 4},
+    {from: 'Node3', to: 'AnotherNode', title:'mod5', value: 5},
+  ]);
+  */
+
+  var data = {
+    nodes: nodes,
+    edges: edges
+  };
+
+  var visibleNodes = {}
+  var enabledEdges = {}
+
+  var updateList = []
+
+  // create a network
+  var container = document.getElementById('mynetwork');
+
+  var options = {
+    physics: {
+      enabled: true,
+    },
+    layout: {randomSeed: 1},
+    edges:{
+      scaling:{
+        min: 0,
+        max: 10,
+      },
+      arrows: {
+        middle: {
+          enabled: true,
+          scaleFactor: 0.3,
+        }
+      }
+    },
+
+    interaction: {navigationButtons: true,
+      zoomView: false},
+
+    manipulation: {
+      addNode: function(data, callback) {
+        // filling in the popup DOM elements
+        document.getElementById("node-operation").innerHTML = "Add Node";
+        editNode(data, clearNodePopUp, callback);
+      },
+      editNode: function(data, callback) {
+        // filling in the popup DOM elements
+        document.getElementById("node-operation").innerHTML = "Edit Node";
+        editNode(data, cancelNodeEdit, callback);
+      },
+      addEdge: function(data, callback) {
+        document.getElementById("edge-operation").innerHTML = "Add Edge";
+        editEdgeWithoutDrag(data, callback);
+      },
+      editEdge: {
+        editWithoutDrag: function(data, callback) {
+          document.getElementById("edge-operation").innerHTML = "Edit Edge";
+          editEdgeWithoutDrag(data, callback);
+        }
+      },
+      deleteNode: true,
+      deleteEdge: true,
+    },
+  };
+
+  var network = new vis.Network(container, data, options);
+
+  function editNode(data, cancelAction, callback) {
+    document.getElementById("node-label").value = data.label;
+    document.getElementById("node-saveButton").onclick = saveNodeData.bind(
+      this,
+      data,
+      callback
+    );
+    document.getElementById("node-cancelButton").onclick = cancelAction.bind(
+      this,
+      callback
+    );
+    document.getElementById("node-popUp").style.display = "block";
+  }
+
+  // Callback passed as parameter is ignored
+  function clearNodePopUp() {
+    document.getElementById("node-saveButton").onclick = null;
+    document.getElementById("node-cancelButton").onclick = null;
+    document.getElementById("node-popUp").style.display = "none";
+  }
+
+  function cancelNodeEdit(callback) {
+    clearNodePopUp();
+    callback(null);
+  }
+
+  function saveNodeData(data, callback) {
+    data.label = document.getElementById("node-label").value;
+    console.log('saving data: ')
+    console.log(data)
+    clearNodePopUp();
+    callback(data);
+  }
+
+  function editEdgeWithoutDrag(data, callback) {
+    // filling in the popup DOM elements
+    edgeObj = network.body.data.edges.get(data.id);
+    if (edgeObj.hasOwnProperty('title')) {
+      document.getElementById("edge-weight-code").value = edgeObj.title;
+    }
+    else {
+      document.getElementById("edge-weight-code").value = "_"
+    }
+    if (edgeObj.hasOwnProperty('value')) {
+      document.getElementById("likelihood-rat").value = edgeObj.value;
+    }
+    else
+    {
+      document.getElementById("likelihood-rat").value = "2"
+    }
+    if (edgeObj.hasOwnProperty('causality')&&(edgeObj.causality==='reversed')){
+      document.getElementById("reversed-radio").checked = true;
+    }
+    else {
+      document.getElementById("forward-radio").checked = true;
+    }
+    document.getElementById("edge-saveButton").onclick = saveEdgeData.bind(
+      this,
+      data,
+      callback
+    );
+    document.getElementById("edge-cancelButton").onclick = cancelEdgeEdit.bind(
+      this,
+      callback
+    );
+    document.getElementById("edge-popUp").style.display = "block";
+  }
+
+  function clearEdgePopUp() {
+    document.getElementById("edge-saveButton").onclick = null;
+    document.getElementById("edge-cancelButton").onclick = null;
+    document.getElementById("edge-popUp").style.display = "none";
+  }
+
+  function cancelEdgeEdit(callback) {
+    clearEdgePopUp();
+    callback(null);
+  }
+
+  function saveEdgeData(data, callback) {
+    if (typeof data.to === "object") data.to = data.to;
+    if (typeof data.from === "object") data.from = data.from;
+    data.title = document.getElementById("edge-weight-code").value;
+    data.value = document.getElementById("likelihood-rat").value;
+    if (document.getElementById("forward-radio").checked === true) {
+      data.causality = 'forward'
+    }
+    else {
+      data.causality = 'reversed'
+    }
+    clearEdgePopUp();
+    callback(data);
+  }
+
+  function customSubmit() {
+    dataToSend = JSON.stringify(updateList);
+    console.log('submitting post request')
+    $.post( "/", dataToSend);
+    updateList = []
+  }
+
+  data.nodes.on('*', function(event, properties, senderId) {
+    if (event === 'update') {
+      //if nodes have been updated, we check to see whether this update was
+      //to more than just the "hidden" and "physics" attributes. If the update
+      //is not just to these attributes, add it to the "updates" object
+      var nodeChanges = {'type': 'nodes', 'event':'update', 'objs':[]};
+      for (h=0;h<properties.data.length;h++) {
+        if (properties.oldData[h].label === properties.data[h].label) {
+        }
+        else {
+          var updateObj = {'label':properties.data[h].label,
+            'id':properties.data[h].id}
+          nodeChanges.objs.push(updateObj)
+        }
+      }
+      if (nodeChanges.objs.length>0) {
+        updateList.push(nodeChanges);
+      }
+    }
+    else {
+      if (event === 'add') {
+        var nodeChanges = {'type': 'nodes', 'event':'add', 'objs':[]};
+        for (h=0;h<properties.items.length;h++) {
+
+          nodeName = properties.items[h]
+          nodeObj = data.nodes.get(nodeName)
+          delete nodeObj["x"]
+          delete nodeObj["y"]
+          nodeChanges.objs.push(nodeObj)
+        }
+        updateList.push(nodeChanges)
+      }
+      else {
+        if (event === 'remove') {
+          var nodeChanges = {'type': 'nodes', 'event':'remove', 'ids':[]}
+          for (h=0;h<properties.oldData.length;h++) {
+            nodeChanges.ids.push(properties.oldData[h].id)
+          }
+          updateList.push(nodeChanges)
+        }
+      }
+    }
+  });
+
+  data.edges.on('*', function(event, properties, senderId) {
+    if (event === 'update') {
+      //if nodes have been updated, we check to see whether this update was
+      //to more than just the "hidden" and "physics" attributes. If the update
+      //is not just to these attributes, add it to the "updates" object
+      var edgeChanges = {'type': 'edges', 'event':'update', 'objs':[]};
+
+      for (h=0;h<properties.data.length;h++) {
+        if (properties.oldData[h].label === properties.data[h].label) {
+        }
+        else {
+          var updateObj = {'from':properties.data[h].from,
+            'to':properties.data[h].to,
+            'title':properties.data[h].title,
+            'value':properties.data[h].value,
+            'causality':properties.data[h].causality,
+          }
+          edgeChanges.objs.push(updateObj)
+        }
+      }
+      if (updateList.length>0) {
+        updateList.push(edgeChanges);
+      }
+    }
+    else {
+      if (event === 'add') {
+        var edgeChanges = {'type': 'edges', 'event':'add', 'objs':[]};
+        for (h=0;h<properties.items.length;h++) {
+          edgeName = properties.items[h]
+          edgeObj = data.edges.get(edgeName)
+          edgeChanges.objs.push(edgeObj)
+        }
+        updateList.push(edgeChanges)
+      }
+      else {
+        if (event === 'remove') {
+          var edgeChanges = {'type': 'edges', 'event':'remove', 'ids':[]}
+          for (h=0;h<properties.oldData.length;h++) {
+            edgeChanges.ids.push(properties.oldData[h].id)
+          }
+          updateList.push(edgeChanges)
+        }
+      }
+    }
+  });
+
+  function getByProperty(dataset, property, value) {
+    //this function allows be to get a list of nodes or edges based on their
+    //properties instead of just by their ID
+    //Returns a list of node objects
+    var ret = dataset.get({
+      filter: function (item) {
+      return (item[property] == value);
+      }
+    });
+    return ret
+  }
+
+  function setView(focus, degrees) {
+    //start by hiding all nodes currently visible and turn off their physics
+
+    /*
+    if (visibleNodes.length > 0) {
+      var visibleNodesList = Object.keys(visibleNodes);
+      for (i=0;i<visibleNodesList.length;i++) {
+        nodes.update([{id: visibleNodesList[i],
+          hidden: true,
+          physics: false}]);
+      }
+    }
+    */
+
+    var nodesList = data.nodes.get()
+
+    for (i=0;i<nodesList.length;i++) {
+      iNode = nodesList[i];
+      iNode.hidden = true;
+      iNode.physics = false;
+      data.nodes.update([iNode]);
+    }
+
+    var edgesList = data.edges.get()
+
+    for (i=0;i<edgesList.length;i++) {
+      iEdge = edgesList[i];
+      iEdge.physics = false
+      data.edges.update([iEdge]);
+    }
+
+    //reset the nodesInFocus to contain just the chosen node
+    visibleNodes = {};
+    focusObj = getByProperty(data.nodes, 'label', focus)[0]
+    visibleNodes[focusObj.id] = true;
+
+    //find all nodes within a given number of degrees of separation from the
+    //chosen node, add them to the list
+    for (i=0;i<degrees;i++) {
+      visibleNodesList = Object.keys(visibleNodes);
+      for (j=0;j<visibleNodesList.length;j++) {
+        var someAdjNodes = network.getConnectedNodes(visibleNodesList[j],
+          degrees);
+        for (k=0;k<someAdjNodes.length;k++) {
+          visibleNodes[someAdjNodes[k]] = true
+        }
+      }
+    }
+    enabledEdges = {}
+    visibleNodesList = Object.keys(visibleNodes);
+    for (i=0;i<visibleNodesList.length;i++) {
+      var ithNode = data.nodes.get(visibleNodesList[i]);
+      ithNode.hidden = false;
+      ithNode.physics = true;
+      data.nodes.update([ithNode]);
+      someVisEdges = network.getConnectedEdges(visibleNodesList[i])
+      for (j=0;j<someVisEdges.length;j++) {
+        enabledEdges[someVisEdges[j]] = true;
+      }
+    }
+
+    enabledEdgesList = Object.keys(enabledEdges)
+    for (i=0;i<enabledEdgesList.length;i++) {
+      var ithEdge = data.edges.get(enabledEdgesList[i]);
+      ithEdge.physics = true;
+      data.edges.update([ithEdge]);
+    }
+
+    network.focus(focusObj.id)
+
+  };
+
+  //setView('Hypoglycemia', 10);
+
+  function focusSelected() {
+    var selectedFocus = document.getElementById("focus-item").value;
+    var selectedDegrees = document.getElementById("focus-degrees").value;
+    setView(selectedFocus, selectedDegrees)
+  }
+
+  function setAllVisible() {
+    var nodesList = data.nodes.get()
+
+    for (i=0;i<nodesList.length;i++) {
+      iNode = nodesList[i];;
+      iNode.hidden = false;
+      iNode.physics = true;
+      data.nodes.update([iNode]);
+    }
+  }
+
+  function togglePhysics() {
+    if (document.getElementById('physics-checkbox').checked) {
+      network.setOptions( { physics: true } );
+    } else {
+      network.setOptions( { physics: false } );
+    }
+  }
+
+  setAllVisible()
+
+  network.enableEditMode();
+
+</script>
+</body>
+</html>

@@ -6,5 +6,7 @@ node.js
 
 # How to use:
 > cd /path/to/flowchart_writer
+
 > node backend.js
+
 in browser, navigate to localhost:8080/

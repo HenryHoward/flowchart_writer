@@ -5,6 +5,8 @@ Browser-based user interface that allows the user to create a flowchart represen
 node.js
 
 # How to use:
+download flowchart_writer
+
 from command line:
 
 > cd /path/to/flowchart_writer

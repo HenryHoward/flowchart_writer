@@ -45,16 +45,24 @@ const server = http.createServer((req, res) => {
         if (err) throw err;
         db = JSON.parse(data);
         console.log('database loaded')
-        modifyDatabase(db, resultObj)
+        modifyDatabase(db, resultObj, function() {
+          fs.readFile('index.html', function(err, data) {
+            fs.readFile('connections.json', 'utf8', function (err, dbdata) {
+              if (err) throw err;
+              db = JSON.parse(dbdata);
+              res.writeHead(200, {'Content-Type': 'text/html'});
+              data = data.toString();
+              data = data.replace("<!--edgesFromDataBaseGoHere-->", JSON.stringify(db.edges));
+              data = data.replace("<!--nodesFromDataBaseGoHere-->", JSON.stringify(db.nodes));
+              data = Buffer.from(data, 'utf8');
+              res.write(data);
+              res.end();
+            });
+          })
+        })
       });
       //figure out data format
-      /*
-      fs.readFile('index.html', function(err, data) {
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.write(data);
-        res.end();
-      })
-      */
+
     });
   }
   else {
@@ -75,7 +83,7 @@ const server = http.createServer((req, res) => {
 });
 
 
-function modifyDatabase(database, changesObj) {
+function modifyDatabase(database, changesObj, callback) {
   console.log('modifying database')
   /*
   changesObj is a JSON object of the following form:
@@ -96,10 +104,8 @@ function modifyDatabase(database, changesObj) {
   for (i=0;i<changesObj.length;i++) {
     iChange = changesObj[i]
     if ((iChange.type === 'nodes')&&(iChange.event != 'remove')) {
-      console.log(iChange.objs)
       for (j=0;j<iChange.objs.length;j++) {
-        console.log(iChange.objs[j]);
-        nodesQueryMerged[iChange.objs[j].id] = iChange.objs[j].label
+        nodesQueryMerged[iChange.objs[j].id] = true
       }
     }
     if (iChange.event != 'remove') {
@@ -115,9 +121,11 @@ function modifyDatabase(database, changesObj) {
               idxToUpdate = k
             }
           }
-          console.log('idx is: '+k)
-          database[iChange.type].splice(k, 1)
+          console.log('replacing at index: '+idxToUpdate)
+          console.log('(kth item before splice is: '+database[iChange.type][idxToUpdate])
+          database[iChange.type].splice(idxToUpdate, 1)
           database[iChange.type].push(jObj)
+          console.log('(kth item after replace is: '+database[iChange.type][idxToUpdate])
         }
         else {
           //if adding, simply add the object item to the database
@@ -127,6 +135,7 @@ function modifyDatabase(database, changesObj) {
             jObj.hidden = true
             jObj.physics = false
           }
+          console.log(jObj)
           database[iChange.type].push(jObj)
         }
       }
@@ -139,7 +148,6 @@ function modifyDatabase(database, changesObj) {
         jId = iChange.ids[j]
         var idxToDelete
         for (k=0;k<database[iChange.type].length;k++) {
-          console.log('checking to see if '+database[iChange.type][k].id+'is equivalent to '+jId)
           if (database[iChange.type][k].id === jId) {
             idxToDelete = k
             break
@@ -156,18 +164,35 @@ function modifyDatabase(database, changesObj) {
   stringReplacements = [];
   nodesQueryMergedList = Object.keys(nodesQueryMerged);
   for (i=0;i<nodesQueryMergedList.length;i++) {
+    var iId = nodesQueryMergedList[i]
+    var nMatches = 0 //if this is ever >1, emergency!
+    for (j=0;j<database.nodes.length;j++) {
+      if (iId === database.nodes[j].id) {
+        nodesQueryMerged[iId] = database.nodes[j].label
+        nMatches += 1
+      }
+    }
+    if (nMatches > 1) {
+      console.log('EMERGENCY')
+      console.log('Multiple copies of id: '+iId)
+    }
+  }
+  for (i=0;i<nodesQueryMergedList.length;i++) {
     console.log('currently looking at:')
     console.log(nodesQueryMergedList[i])
     stringReplacements.push([nodesQueryMergedList[i]]);
-    for (j=database.nodes.length-1;j>=0;j--) {
-      console.log('checking whether: '+nodesQueryMerged[nodesQueryMergedList[i]]+' is the same as: '+database.nodes[j].label)
-      console.log(nodesQueryMergedList[i])
-      if (nodesQueryMergedList[i] != database.nodes[j].id) {
-        if (nodesQueryMerged[nodesQueryMergedList[i]] === database.nodes[j].label) {
-          stringReplacements[stringReplacements.length-1].push(database.nodes[j].id);
-          database.nodes.splice(j, 1);
+    if (nodesQueryMerged[nodesQueryMergedList[i]] != "") {
+      for (j=database.nodes.length-1;j>=0;j--) {
+        if (nodesQueryMergedList[i] != database.nodes[j].id) {
+          if (nodesQueryMerged[nodesQueryMergedList[i]] === database.nodes[j].label) {
+            stringReplacements[stringReplacements.length-1].push(database.nodes[j].id);
+            database.nodes.splice(j, 1);
+          };
         };
       };
+    }
+    else {
+      console.log('blank node ignored from mergers')
     };
     if (stringReplacements[stringReplacements.length-1].length === 1) {
       stringReplacements.pop();
@@ -188,6 +213,7 @@ function modifyDatabase(database, changesObj) {
     if (err) throw err;
     console.log('data logged')
   });
+  callback();
 }
 
 

@@ -38,14 +38,18 @@ const server = http.createServer((req, res) => {
     collectRequestData(req, result => {
       resultObj = JSON.parse(result)
       console.log('request received')
+      console.log('result obj is:')
+      console.log(resultObj)
       //network data
       //Now alter the request
+      var positionsObj = resultObj[0]
+      var updatesObj = resultObj[1]
       var db
       fs.readFile('connections.json', 'utf8', function (err, data) {
         if (err) throw err;
         db = JSON.parse(data);
         console.log('database loaded')
-        modifyDatabase(db, resultObj, function() {
+        modifyDatabase(db, updatesObj, positionsObj, function() {
           fs.readFile('index.html', function(err, data) {
             fs.readFile('connections.json', 'utf8', function (err, dbdata) {
               if (err) throw err;
@@ -83,7 +87,7 @@ const server = http.createServer((req, res) => {
 });
 
 
-function modifyDatabase(database, changesObj, callback) {
+function modifyDatabase(database, changesObj, positionsObj, callback) {
   console.log('modifying database')
   /*
   changesObj is a JSON object of the following form:
@@ -99,7 +103,15 @@ function modifyDatabase(database, changesObj, callback) {
       objs: [ [Object] ]
     }
   ]
+
+  positionsObj is a JSON object of the following form:
+  {
+    nodeId1: {x: xValue, y:yValue},
+    nodeId2: {x: xValue, y:yValue},
+    ...
+  }
   */
+
   var nodesQueryMerged = {};
   for (i=0;i<changesObj.length;i++) {
     iChange = changesObj[i]
@@ -209,6 +221,17 @@ function modifyDatabase(database, changesObj, callback) {
       databaseString = databaseString.replace(new RegExp(iReplacements[j], 'g'), iReplacements[0])
     }
   }
+
+  database = JSON.parse(databaseString)
+  for (i=0;i<database.nodes.length;i++) {
+    ithNode = database.nodes[i]
+    console.log('x coord:'+positionsObj[ithNode.id].x)
+    ithNode.x = positionsObj[ithNode.id].x
+    console.log('y coord:'+positionsObj[ithNode.id].y)
+    ithNode.y = positionsObj[ithNode.id].y
+  }
+  databaseString = JSON.stringify(database)
+
   fs.writeFile('connections.json', databaseString, function (err) {
     if (err) throw err;
     console.log('data logged')

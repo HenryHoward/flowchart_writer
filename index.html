@@ -162,7 +162,7 @@
   </table>
   <button id=focus-button onClick='focusSelected()'>Focus</button>
   <div class='physics-div'>
-    <input type="checkbox" id="physics-checkbox" name="physics" value="1" onclick="togglePhysics()" checked>
+    <input type="checkbox" id="physics-checkbox" name="physics" value="1" onclick="togglePhysics()">
     <label for="physics-checkbox">Network physics</label><br>
   </div>
 </div>
@@ -266,14 +266,19 @@
 
   var updateList = []
 
+  var physicsWasRun = false
+
   // create a network
   var container = document.getElementById('mynetwork');
 
   var options = {
     physics: {
-      enabled: true,
+      enabled: false,
     },
-    layout: {randomSeed: 1},
+    layout: {
+      randomSeed: 1,
+      improvedLayout:false,
+    },
     edges:{
       scaling:{
         min: 0,
@@ -413,10 +418,15 @@
   }
 
   function customSubmit() {
-    dataToSend = JSON.stringify(updateList);
+    if (physicsWasRun == true) {
+      dataToSend = JSON.stringify([network.getPositions(),updateList]);
+    } else {
+      dataToSend = JSON.stringify([false,updateList]);
+    }
     console.log('submitting post request')
     $.post( "/", dataToSend);
     updateList = []
+    physicsWasRun = false
   }
 
   data.nodes.on('*', function(event, properties, senderId) {
@@ -536,21 +546,23 @@
     */
 
     var nodesList = data.nodes.get()
-
+    var hideNodes = []
     for (i=0;i<nodesList.length;i++) {
       iNode = nodesList[i];
       iNode.hidden = true;
       iNode.physics = false;
-      data.nodes.update([iNode]);
+      hideNodes.push(iNode)
     }
+    data.nodes.update(hideNodes);
 
     var edgesList = data.edges.get()
-
+    var hideEdges = []
     for (i=0;i<edgesList.length;i++) {
       iEdge = edgesList[i];
-      iEdge.physics = false
-      data.edges.update([iEdge]);
+      iEdge.physics = false;
+      hideEdges.push(iEdge);
     }
+    data.edges.update(hideEdges);
 
     //reset the nodesInFocus to contain just the chosen node
     visibleNodes = {};
@@ -571,26 +583,29 @@
     }
     enabledEdges = {}
     visibleNodesList = Object.keys(visibleNodes);
+    var visNodes = []
     for (i=0;i<visibleNodesList.length;i++) {
       var ithNode = data.nodes.get(visibleNodesList[i]);
       ithNode.hidden = false;
       ithNode.physics = true;
-      data.nodes.update([ithNode]);
+      visNodes.push(ithNode)
       someVisEdges = network.getConnectedEdges(visibleNodesList[i])
       for (j=0;j<someVisEdges.length;j++) {
         enabledEdges[someVisEdges[j]] = true;
       }
     }
+    data.nodes.update(visNodes);
 
     enabledEdgesList = Object.keys(enabledEdges)
+    var visEdges = []
     for (i=0;i<enabledEdgesList.length;i++) {
       var ithEdge = data.edges.get(enabledEdgesList[i]);
       ithEdge.physics = true;
-      data.edges.update([ithEdge]);
+      visEdges.push(ithEdge)
     }
+    data.edges.update(visEdges);
 
     network.focus(focusObj.id)
-
   };
 
   //setView('Hypoglycemia', 10);
@@ -603,13 +618,14 @@
 
   function setAllVisible() {
     var nodesList = data.nodes.get()
-
+    var updates = []
     for (i=0;i<nodesList.length;i++) {
-      iNode = nodesList[i];;
+      iNode = nodesList[i];
       iNode.hidden = false;
       iNode.physics = true;
-      data.nodes.update([iNode]);
+      updates.push(iNode);
     }
+    data.nodes.update(updates)
   }
 
   function togglePhysics() {
@@ -618,6 +634,7 @@
     } else {
       network.setOptions( { physics: false } );
     }
+    physicsWasRun = true
   }
 
   setAllVisible()

@@ -2,59 +2,101 @@
 <html>
 <head>
   <title>Network</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
   <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>  <style type="text/css">
 
     body {
-      font-family: Helvetica;
+      font-family: "Roboto", "Helvetica";
+      background-color: #f3f3f3;
+    }
+
+    ::selection {
+      background: #a632a8; /* WebKit/Blink Browsers */
+    }
+
+    p {
+      color: #222222
+      font-size: 16px;
+    }
+
+    label {
+      color: #222222;
+      font-size: 16px;
     }
 
     .page-title {
-      text-align: center;
+      text-align: left;
+      font-family: "Libre Baskerville", serif;
+    }
+
+
+    .page-title h1{
+      margin:10px;
+      display:inline-block;
+      padding: 20px;
+      color: #222222;
+      font-size: 32px;
+      background: white;
+      border: solid 4px #222222;
+      border-radius: 2px;
+    }
+
+    .page-title h2 {
+      margin: 0px 10px 10px 10px;
+      font-size: 16px;
+      color: #222222;
     }
 
     #mynetwork {
-      width:100%;
       height: 90vh;
-      margin:auto;
-      border: 1px solid lightgray;
+      margin:10px;
+      background-color: #fafafa;
+      border-radius: 5px;
+    }
+
+    .vis-network:focus {
+      outline: 3px solid #d7050570;
     }
 
     #node-popUp {
       display: none;
       position: absolute;
-      top: 45%;
+      top: 60%;
       left: 2.9%;
       z-index: 299;
       min-width: 90%;
       min-height: 10%;
-      background-color: #f9f9f9;
-      border-style: solid;
-      border-width: 3px;
-      border-color: #5394ed;
+      background-color: #fcfcfc;
+      border-radius: 5px;
       padding: 10px;
       text-align: center;
     }
     #edge-popUp {
       display: none;
       position: absolute;
-      top: 45%;
+      top: 60%;
       left: 2.9%;
       z-index: 299;
       min-width: 90%;
       min-height: 10%;
-      background-color: #f9f9f9;
-      border-style: solid;
-      border-width: 3px;
-      border-color: #5394ed;
+      background-color: #fcfcfc;
+      border-radius: 5px;
       padding: 10px;
       text-align: center;
     }
-    #item-focusor {
-      text-align: center;
+
+    .item-focusor {
+      display:inline-block;
+      margin:10px;
+      text-align: left;
       padding:20px;
+      background-color: #fafafa;
+      border-radius: 5px;
     }
+
     table.legend_table {
-      font-size: 11px;
+      font-size: 16px;
       border-width: 1px;
       border-color: #d3d3d3;
       border-style: solid;
@@ -62,6 +104,7 @@
     table.legend_table,
     td {
       padding: 2px;
+      color: #222222;
     }
     div.table_content {
       width: 80px;
@@ -113,7 +156,9 @@
     #save-button {
       margin: auto;
       padding: 10px 15px;
-      border: solid 1px #222222;
+      border: solid 2px #333333;
+      background-color: #fafafa;
+      border-radius: 2px;
       font-size: 16px;
     }
 
@@ -122,13 +167,34 @@
     }
 
     .physics-div {
-      padding:20px;
+      padding:20px 0px;
+    }
+
+    #mynetwork .vis-network .vis-manipulation {
+      background: transparent;
+    }
+
+    div.vis-network div.vis-manipulation div.vis-button.vis-connect {
+      background-image:url("test_plus.png")
+    }
+
+    div.vis-network div.vis-manipulation div.vis-button.vis-add {
+    }
+
+    div.vis-network div.vis-manipulation div.vis-separator-line {
+      visibility: hidden;
+    }
+
+    div.vis-network div.vis-manipulation div.vis-button.vis-delete {
+    }
+
+    div.vis-network div.vis-manipulation div.vis-button.vis-edit {
+    }
+
+    .information h1, .information p {
     }
 
     @media (min-width: 768px) {
-      #mynetwork {
-        width: 80%;
-      }
 
       #edge-popUp {
         left: 35%;
@@ -145,10 +211,15 @@
 </head>
 <body>
 <div class='page-title'>
-  <h1>Flowchart</h1>
+  <div>
+    <div class="title-container">
+      <img src='./logo.png'></img>
+    </div>
+  </div>
+  <h2>The Flowchart of Medical Diagnosis</h2>
 </div>
-<div id='item-focusor'>
-  <table style="margin:auto;">
+<div class='item-focusor'>
+  <table>
     <tbody>
       <tr>
         <td>Select an item:</td>
@@ -161,11 +232,16 @@
     </tbody>
   </table>
   <button id=focus-button onClick='focusSelected()'>Focus</button>
-  <div class='physics-div'>
-    <input type="checkbox" id="physics-checkbox" name="physics" value="1" onclick="togglePhysics()">
-    <label for="physics-checkbox">Network physics</label><br>
+</div>
+<div>
+  <div class='item-focusor'>
+    <div class='physics-div'>
+      <input type="checkbox" id="physics-checkbox" name="physics" value="1" onclick="togglePhysics()">
+      <label for="physics-checkbox">Network physics</label><br>
+    </div>
   </div>
 </div>
+
 <div id="mynetwork"></div>
 
 <div id="node-popUp">
@@ -175,6 +251,18 @@
       <tr>
         <td>Name:</td>
         <td><input id="node-label" value="new value" /></td>
+      </tr>
+      <tr>
+        <td>Prevalence:</td>
+        <td><input id="node-prev" value="new value" /></td>
+      </tr>
+      <tr>
+        <td>Comment:</td>
+        <td><input id="node-comment" value="new value" /></td>
+      </tr>
+      <tr>
+        <td>References:</td>
+        <td><input id="node-references" value="new value" /></td>
       </tr>
     </tbody>
   </table>
@@ -199,13 +287,31 @@
         <td class='lr-row'><input id="likelihood-rat" value="new value" /></td>
       </tr>
       <tr>
-        <td>Causality:</td>
+        <td>Nature of connection:</td>
         <td class='lr-row'>
           <input type="radio" id="forward-radio" name="causality" value="forward">
-          <label for="forward-radio">Forward</label>
+          <label for="forward-radio">Causes</label>
           <input type="radio" id="reversed-radio" name="causality" value="reversed">
-          <label for="reversed-radio">Reversed</label>
+          <label for="reversed-radio">Caused by</label>
+          <input type="radio" id="subtype-of-radio" name="causality" value="sub">
+          <label for="subtype-of-radio">Subtype of</label>
+          <input type="radio" id="guideline-radio" name="causality" value="guideline">
+          <label for="guideline-radio">Guideline</label>
+          <input type="radio" id="has-vals-radio" name="causality" value="has-val">
+          <label for="has-vals-radio">Has values</label>
+          <input type="radio" id="val-of-radio" name="causality" value="is-val">
+          <label for="val-of-radio">Is value of</label>
+          <input type="radio" id="combiner-radio" name="causality" value="combo">
+          <label for="combiner-radio">Combines with</label>
         </td>
+      </tr>
+      <tr>
+        <td>Comment:</td>
+        <td><input id="edge-comment" value="new value" /></td>
+      </tr>
+      <tr>
+        <td>References:</td>
+        <td><input id="edge-references" value="new value" /></td>
       </tr>
     </tbody>
   </table>
@@ -215,6 +321,15 @@
 
 <div class='save-div'>
   <button id=save-button onClick='customSubmit()'>Save changes</button>
+</div>
+
+<div>
+  <div class='item-focusor'>
+    <div class='information'>
+      <h1 class="item-name">Example Title</h1>
+      <p class="item-comment">example comment</p>
+    </div>
+  </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"
@@ -279,10 +394,27 @@
       randomSeed: 1,
       improvedLayout:false,
     },
+    nodes:{
+      font:{
+        color: '#f1f1f1',
+        face: "Roboto",
+        size: 16,
+      },
+      color: {
+        background:"#58020270",
+        highlight: "#d7050570",
+        border: "#d7050570",
+      },
+      mass:1.5,
+    },
     edges:{
       scaling:{
         min: 0,
         max: 10,
+      },
+      color: {
+        color: "#58020270",
+        highlight: "#d7050570"
       },
       arrows: {
         middle: {
@@ -325,6 +457,25 @@
 
   function editNode(data, cancelAction, callback) {
     document.getElementById("node-label").value = data.label;
+
+    if (data.hasOwnProperty('comment')) {
+      document.getElementById("node-comment").value = data.comment;
+    } else {
+      document.getElementById("node-comment").value = "";
+    }
+
+    if (data.hasOwnProperty('prevalence')) {
+      document.getElementById("node-prev").value = data.prevalence;
+    } else {
+      document.getElementById("node-prev").value = 0.01;
+    }
+
+    if (data.hasOwnProperty('references')) {
+      document.getElementById("node-references").value = data.references;
+    } else {
+      document.getElementById("node-references").value = "";
+    }
+
     document.getElementById("node-saveButton").onclick = saveNodeData.bind(
       this,
       data,
@@ -351,10 +502,22 @@
 
   function saveNodeData(data, callback) {
     data.label = document.getElementById("node-label").value;
+    data.comment = document.getElementById("node-comment").value;
+    data.prevalence = document.getElementById("node-prev").value;
+    data.references = document.getElementById("node-references").value;
     console.log('saving data: ')
     console.log(data)
     clearNodePopUp();
     callback(data);
+  }
+
+  var radioDict = {
+    'sub':'subtype-of-radio',
+    'guideline':'guideline-radio',
+    'has-val': 'has-vals-radio',
+    'is-val': 'val-of-radio',
+    'combo':'combiner-radio',
+    'reversed':'reversed-radio'
   }
 
   function editEdgeWithoutDrag(data, callback) {
@@ -366,6 +529,21 @@
     else {
       document.getElementById("edge-weight-code").value = "_"
     }
+
+    if (edgeObj.hasOwnProperty('comment')) {
+      document.getElementById("edge-comment").value = edgeObj.comment;
+    }
+    else {
+      document.getElementById("edge-comment").value = ""
+    }
+
+    if (edgeObj.hasOwnProperty('references')) {
+      document.getElementById("edge-references").value = edgeObj.references;
+    }
+    else {
+      document.getElementById("edge-references").value = ""
+    }
+
     if (edgeObj.hasOwnProperty('value')) {
       document.getElementById("likelihood-rat").value = edgeObj.value;
     }
@@ -373,12 +551,15 @@
     {
       document.getElementById("likelihood-rat").value = "2"
     }
-    if (edgeObj.hasOwnProperty('causality')&&(edgeObj.causality==='reversed')){
-      document.getElementById("reversed-radio").checked = true;
+
+    if (edgeObj.hasOwnProperty('causality')&&(edgeObj.causality!=='forward')){
+      document.getElementById(radioDict[edgeObj.causality]).checked = true;
+      //tick the box according to how causality is currently set
     }
     else {
       document.getElementById("forward-radio").checked = true;
     }
+
     document.getElementById("edge-saveButton").onclick = saveEdgeData.bind(
       this,
       data,
@@ -407,26 +588,72 @@
     if (typeof data.from === "object") data.from = data.from;
     data.title = document.getElementById("edge-weight-code").value;
     data.value = document.getElementById("likelihood-rat").value;
+    data.comment = document.getElementById("edge-comment").value;
+    data.references = document.getElementById("edge-references").value;
     if (document.getElementById("forward-radio").checked === true) {
       data.causality = 'forward'
     }
-    else {
+    if (document.getElementById("reversed-radio").checked === true) {
       data.causality = 'reversed'
+    }
+    if (document.getElementById("subtype-of-radio").checked === true) {
+      data.causality = 'sub'
+    }
+    if (document.getElementById("guideline-radio").checked === true) {
+      data.causality = 'guideline'
+    }
+    if (document.getElementById("has-vals-radio").checked === true) {
+      data.causality = 'is-val'
+    }
+    if (document.getElementById("val-of-radio").checked === true) {
+      data.causality = 'is-val'
+    }
+    if (document.getElementById("combiner-radio").checked === true) {
+      data.causality = 'combo'
     }
     clearEdgePopUp();
     callback(data);
   }
 
+  function getAllPositions() {
+    //this function is necessary because the built-in function getPositions
+    //ignores hidden nodes
+    var allNodes = data.nodes.get()
+    var allIds = []
+    for (i=0;i<allNodes.length;i++) {
+      allIds.push(allNodes[i].id)
+    }
+    var positions = network.getPositions(allIds)
+    /*
+    var allNodes = data.nodes.get()
+    var positions = {}
+    for (i=0;i<allNodes.length;i++) {
+      var ithX = 0
+      var ithY = 0
+      var ithNode = allNodes[i]
+      if (("x" in ithNode)&&("y" in ithNode)) {
+        ithX = ithNode.x
+        ithY = ithNode.y
+      }
+      positions[ithNode.id] = {"x": ithX, "y":ithY}
+      */
+    console.log('number of nodes: '+allIds.length)
+    console.log('number of coords: '+Object.keys(positions).length)
+    return positions
+  }
+
   function customSubmit() {
     if (physicsWasRun == true) {
-      dataToSend = JSON.stringify([network.getPositions(),updateList]);
+      dataToSend = JSON.stringify([getAllPositions(),updateList]);
     } else {
       dataToSend = JSON.stringify([false,updateList]);
     }
     console.log('submitting post request')
-    $.post( "/", dataToSend);
-    updateList = []
-    physicsWasRun = false
+    $.post( "/", dataToSend, function() {
+      //updateList = []
+      //physicsWasRun = false
+      location.reload(true) //need to reload page so that mergers will show
+    });
   }
 
   data.nodes.on('*', function(event, properties, senderId) {
@@ -436,7 +663,8 @@
       //is not just to these attributes, add it to the "updates" object
       var nodeChanges = {'type': 'nodes', 'event':'update', 'objs':[]};
       for (h=0;h<properties.data.length;h++) {
-        if (properties.oldData[h].label === properties.data[h].label) {
+        if ((properties.oldData[h].label === properties.data[h].label)&&
+          (properties.oldData[h].comment === properties.data[h].comment)) {
         }
         else {
           var updateObj = {'label':properties.data[h].label,
@@ -475,16 +703,20 @@
 
   data.edges.on('*', function(event, properties, senderId) {
     if (event === 'update') {
-      //if nodes have been updated, we check to see whether this update was
+      //if edges have been updated, we check to see whether this update was
       //to more than just the "hidden" and "physics" attributes. If the update
       //is not just to these attributes, add it to the "updates" object
       var edgeChanges = {'type': 'edges', 'event':'update', 'objs':[]};
 
       for (h=0;h<properties.data.length;h++) {
-        if (properties.oldData[h].label === properties.data[h].label) {
+        if ((properties.oldData[h].title === properties.data[h].title)&&
+          (properties.oldData[h].value === properties.data[h].value)&&
+          (properties.oldData[h].causality === properties.data[h].causality)) {
         }
         else {
-          var updateObj = {'from':properties.data[h].from,
+          console.log('substantial change made')
+          var updateObj = {'id':properties.data[h].id,
+            'from':properties.data[h].from,
             'to':properties.data[h].to,
             'title':properties.data[h].title,
             'value':properties.data[h].value,
@@ -493,9 +725,7 @@
           edgeChanges.objs.push(updateObj)
         }
       }
-      if (updateList.length>0) {
-        updateList.push(edgeChanges);
-      }
+      updateList.push(edgeChanges);
     }
     else {
       if (event === 'add') {

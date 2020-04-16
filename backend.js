@@ -50,8 +50,10 @@ const server = http.createServer((req, res) => {
         db = JSON.parse(data);
         console.log('database loaded')
         modifyDatabase(db, updatesObj, positionsObj, function() {
+          console.log('callback executing')
           fs.readFile('index.html', function(err, data) {
             fs.readFile('connections.json', 'utf8', function (err, dbdata) {
+              console.log('reading connections.json')
               if (err) throw err;
               db = JSON.parse(dbdata);
               res.writeHead(200, {'Content-Type': 'text/html'});
@@ -60,6 +62,7 @@ const server = http.createServer((req, res) => {
               data = data.replace("<!--nodesFromDataBaseGoHere-->", JSON.stringify(db.nodes));
               data = Buffer.from(data, 'utf8');
               res.write(data);
+              console.log('attempting to deliver updated page')
               res.end();
             });
           })
@@ -223,12 +226,16 @@ function modifyDatabase(database, changesObj, positionsObj, callback) {
   }
 
   database = JSON.parse(databaseString)
-  for (i=0;i<database.nodes.length;i++) {
-    ithNode = database.nodes[i]
-    console.log('x coord:'+positionsObj[ithNode.id].x)
-    ithNode.x = positionsObj[ithNode.id].x
-    console.log('y coord:'+positionsObj[ithNode.id].y)
-    ithNode.y = positionsObj[ithNode.id].y
+  if (positionsObj != false) {
+    for (i=0;i<database.nodes.length;i++) {
+      ithNode = database.nodes[i]
+      console.log('ithNode is:')
+      console.log(ithNode)
+      console.log('x coord:'+positionsObj[ithNode.id].x)
+      ithNode.x = positionsObj[ithNode.id].x
+      console.log('y coord:'+positionsObj[ithNode.id].y)
+      ithNode.y = positionsObj[ithNode.id].y
+    }
   }
   databaseString = JSON.stringify(database)
 
@@ -236,6 +243,7 @@ function modifyDatabase(database, changesObj, positionsObj, callback) {
     if (err) throw err;
     console.log('data logged')
   });
+  console.log('executing callback')
   callback();
 }
 

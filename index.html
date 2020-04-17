@@ -25,27 +25,36 @@
       font-size: 16px;
     }
 
-    .page-title {
+    .navbar {
+      height:50px;
       text-align: left;
-      font-family: "Libre Baskerville", serif;
+      position: fixed;
+      background: #fafafaee;
+      margin: -10px;
+      display: block;
+      width: 100%;
+      z-index: 10;
+      color: #222222;
     }
 
-
-    .page-title h1{
-      margin:10px;
-      display:inline-block;
-      padding: 20px;
-      color: #222222;
-      font-size: 32px;
-      background: white;
-      border: solid 4px #222222;
-      border-radius: 2px;
+    .navbar-left{
+      position:absolute;
     }
 
-    .page-title h2 {
-      margin: 0px 10px 10px 10px;
-      font-size: 16px;
-      color: #222222;
+    .navbar-right{
+      position:absolute;
+      right:20px;
+      vertical-align:middle;
+    }
+
+    .navbar-right a, .navbar-right input {
+      display: inline-block;
+      margin: 15px;
+    }
+
+    #logo {
+      height:34px;
+      padding: 8px
     }
 
     #mynetwork {
@@ -210,13 +219,19 @@
   </style>
 </head>
 <body>
-<div class='page-title'>
-  <div>
-    <div class="title-container">
-      <img src='./logo.png'></img>
+<div class='navbar'>
+  <div class='navbar-left'>
+    <div>
+      <img id="logo" src='https://raw.githubusercontent.com/HenryHoward/flowchart_writer/master/logo.jpg'></img>
     </div>
   </div>
-  <h2>The Flowchart of Medical Diagnosis</h2>
+  <div class='navbar-right'>
+    <a>Home</a>
+    <a>About</a>
+    <input></input>
+  </div>
+</div>
+<div style='height:60px'>
 </div>
 <div class='item-focusor'>
   <table>
